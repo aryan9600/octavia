@@ -1,0 +1,6 @@
+redis/.env
+cronjobs/adminsdk.json
+redis/adminsdk.json
+trigger/vendor
+.idea
+.DS_Store
