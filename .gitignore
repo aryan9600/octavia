@@ -6,3 +6,17 @@ redis/adminsdk.json
 trigger/vendor
 .idea
 .DS_Store
+## Compiled JavaScript files
+**/*.js
+**/*.js.map
+
+# Typescript v1 declaration files
+functions/typings/
+
+functions/node_modules
+firebase.json
+firestore-debug.log
+firestore.indexes.json
+firestore.rules
+functions/package-lock.json
+functions/ui-debug.log
