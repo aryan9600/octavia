@@ -1,5 +1,7 @@
 redis/.env
+cronjobs/.env
 cronjobs/adminsdk.json
+redis/vendor
 redis/adminsdk.json
 trigger/vendor
 .idea
