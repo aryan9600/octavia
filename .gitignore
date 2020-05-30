@@ -1,9 +1,8 @@
-redis/.env
-cronjobs/.env
 cronjobs/adminsdk.json
 redis/vendor
-redis/adminsdk.json
-trigger/vendor
+play/adminsdk.json
+play/.cache-22ryi2ajn2xu5gzzdeuecrfni
+play/.ENV
 .idea
 .DS_Store
 ## Compiled JavaScript files
@@ -20,3 +19,5 @@ firestore.indexes.json
 firestore.rules
 functions/package-lock.json
 functions/ui-debug.log
+
+.vscode

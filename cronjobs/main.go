@@ -26,17 +26,6 @@ type SpotifyTrack struct {
 	TrackID  string   `json:"trackId"`
 	Upvotes  int      `json:"upvotes"`
 	URI      string   `json:"uri"`
-}
-
-type SpotifyTrackWithTime struct {
-	Name     string   `json:"name"`
-	Artists  []string `json:"artists"`
-	Duration int      `json:"duration"`
-	Album    string   `json:"album"`
-	Artwork  string   `json:"artwork"`
-	TrackID  string   `json:"trackId"`
-	Upvotes  int      `json:"upvotes"`
-	URI      string   `json:"uri"`
 	Time	 time.Time		`json:time`
 }
 
