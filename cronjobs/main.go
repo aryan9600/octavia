@@ -18,35 +18,26 @@ import (
 )
 
 type SpotifyTrack struct {
-	Name     string   `json:"name"`
-	Artists  []string `json:"artists"`
-	Duration int      `json:"duration"`
-	Album    string   `json:"album"`
-	Artwork  string   `json:"artwork"`
-	TrackID  string   `json:"trackId"`
-	Upvotes  int      `json:"upvotes"`
-	URI      string   `json:"uri"`
+	Name     string    `json:"name"`
+	Artists  []string  `json:"artists"`
+	Duration int       `json:"duration"`
+	Album    string    `json:"album"`
+	Artwork  string    `json:"artwork"`
+	TrackID  string    `json:"trackId"`
+	Upvotes  int       `json:"upvotes"`
+	URI      string    `json:"uri"`
+	Time     time.Time `json:"time"`
 }
 
-type SpotifyTrackWithTime struct {
-	Name     string   `json:"name"`
-	Artists  []string `json:"artists"`
-	Duration int      `json:"duration"`
-	Album    string   `json:"album"`
-	Artwork  string   `json:"artwork"`
-	TrackID  string   `json:"trackId"`
-	Upvotes  int      `json:"upvotes"`
-	URI      string   `json:"uri"`
-	Time	 time.Time		`json:time`
-}
-
-func main(){
+func main() {
 	initEnv()
-	SpotifyID := os.Getenv("SPOTIFY_ID")
-	SpotifySecret := os.Getenv("SPOTIFY_SECRET")
-	spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
+	//SpotifyID := os.Getenv("SPOTIFY_ID")
+	//SpotifySecret := os.Getenv("SPOTIFY_SECRET")
+	//spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
 	firestoreClient := setupFirestore()
-	RefreshPlaylist(spotifyClient, firestoreClient)
+	//RefreshPlaylist(spotifyClient, firestoreClient)
+	RestoreSongs(firestoreClient)
+	fmt.Println(time.Now())
 }
 
 func initEnv() {
@@ -76,7 +67,7 @@ func setupFirestore() *firestore.Client {
 		log.Fatalln(err)
 	}
 	client, err := app.Firestore(context.Background())
-	if err != nil{
+	if err != nil {
 		log.Fatalln(err)
 	}
 	return client
@@ -99,37 +90,39 @@ func RefreshPlaylist(cli spotify.Client, client *firestore.Client) {
 		doc.DataTo(&track)
 		mostUpvoted = append(mostUpvoted, spotify.ID(track.TrackID))
 	}
+	fmt.Println(mostUpvoted)
 	result, err := cli.GetRecommendations(spotify.Seeds{Tracks: mostUpvoted}, nil, nil)
-	if err!=nil{
+	if err != nil {
 		log.Fatalln(err)
 	}
 	recommendations := result.Tracks
 	for _, recommendation := range recommendations {
 		song, err := cli.GetTrack(recommendation.ID)
-		if err!=nil{
+		if err != nil {
 			log.Fatalln(err)
 		}
 		var songArtists []string
-		for _, artist := range song.SimpleTrack.Artists{
+		for _, artist := range song.SimpleTrack.Artists {
 			songArtists = append(songArtists, artist.Name)
 		}
-		docID := "recentlyPlayed/"+string(song.SimpleTrack.URI)
-		client.Doc(docID).Create(context.Background(), SpotifyTrackWithTime{
-			Name: song.SimpleTrack.Name,
-			Album: song.Album.Name,
-			Artwork: song.Album.Images[0].URL,
+		fmt.Println(song)
+		docID := "songs/" + string(song.SimpleTrack.URI)
+		client.Doc(docID).Create(context.Background(), SpotifyTrack{
+			Name:     song.SimpleTrack.Name,
+			Album:    song.Album.Name,
+			Artwork:  song.Album.Images[0].URL,
 			Duration: song.SimpleTrack.Duration,
-			TrackID: song.SimpleTrack.ID.String(),
-			Upvotes: 0,
-			URI: string(song.SimpleTrack.URI),
-			Artists: songArtists,
-			Time: time.Now(),
-		},)
+			TrackID:  song.SimpleTrack.ID.String(),
+			Upvotes:  0,
+			URI:      string(song.SimpleTrack.URI),
+			Artists:  songArtists,
+			Time:     time.Now(),
+		})
 	}
 }
 
 func RestoreSongs(client *firestore.Client) {
-	comparisonTime := time.Now().Add(time.Duration(-90) * time.Minute)
+	comparisonTime := time.Now().Add(time.Duration(-9) * time.Minute).UTC()
 	query := client.Collection("recentlyPlayed").Where("time", "<", comparisonTime)
 	iter := query.Documents(context.Background())
 	defer iter.Stop()
@@ -142,19 +135,19 @@ func RestoreSongs(client *firestore.Client) {
 			log.Fatalln(err)
 		}
 		fmt.Println(doc.Data())
-		var track SpotifyTrackWithTime
+		var track SpotifyTrack
 		doc.DataTo(&track)
+		fmt.Println(track.URI)
 		client.Doc("songs/"+track.URI).Set(context.Background(), SpotifyTrack{
-			Name: track.Name,
-			Album: track.Name,
-			Artwork: track.Artwork,
+			Name:     track.Name,
+			Album:    track.Name,
+			Artwork:  track.Artwork,
 			Duration: track.Duration,
-			TrackID: track.TrackID,
-			Upvotes: 0,
-			Artists: track.Artists,
+			TrackID:  track.TrackID,
+			Upvotes:  track.Upvotes,
+			Artists:  track.Artists,
+			Time:     track.Time,
 		})
 		doc.Ref.Delete(context.Background())
 	}
 }
-
-
