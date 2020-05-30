@@ -1,8 +1,11 @@
-redis/.env
-cronjobs/.env
 cronjobs/adminsdk.json
+cronjobs/.ENV
 redis/vendor
 redis/adminsdk.json
+redis/.env
+play/adminsdk.json
+play/.cache-22ryi2ajn2xu5gzzdeuecrfni
+play/.ENV
 trigger/vendor
 .idea
 .DS_Store
@@ -20,3 +23,5 @@ firestore.indexes.json
 firestore.rules
 functions/package-lock.json
 functions/ui-debug.log
+
+.vscode

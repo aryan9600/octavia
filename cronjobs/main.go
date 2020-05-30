@@ -31,11 +31,11 @@ type SpotifyTrack struct {
 
 func main() {
 	initEnv()
-	//SpotifyID := os.Getenv("SPOTIFY_ID")
-	//SpotifySecret := os.Getenv("SPOTIFY_SECRET")
-	//spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
+	SpotifyID := os.Getenv("SPOTIFY_ID")
+	SpotifySecret := os.Getenv("SPOTIFY_SECRET")
+	spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
 	firestoreClient := setupFirestore()
-	//RefreshPlaylist(spotifyClient, firestoreClient)
+	RefreshPlaylist(spotifyClient, firestoreClient)
 	RestoreSongs(firestoreClient)
 	fmt.Println(time.Now())
 }

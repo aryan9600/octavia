@@ -1,0 +1,13 @@
+version: '3'
+services:
+  redis-server:
+    image: 'redis'
+    volumes:
+      - ./redis.conf:/redis.conf
+    command: [ "redis-server", "/redis.conf" ]
+  spotify-redis:
+    environment: 
+      - SPOTIPY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIPY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - SPOTIPY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}
+    build: .
