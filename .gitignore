@@ -1,4 +1,5 @@
 cronjobs/adminsdk.json
+cronjobs/.ENV
 redis/vendor
 play/adminsdk.json
 play/.cache-22ryi2ajn2xu5gzzdeuecrfni
