@@ -1,5 +1,9 @@
 cronjobs/adminsdk.json
 cronjobs/.ENV
+cronjobs/restoration/function.zip
+cronjobs/recommendations/function.zip
+cronjobs/recommendations/main
+cronjobs/restoration/main
 redis/vendor
 redis/adminsdk.json
 redis/.env
