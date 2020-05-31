@@ -10,12 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	// "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/api/iterator"
 
-	//	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -38,71 +37,22 @@ type SpotifyTrack struct {
 }
 
 func main() {
-	// SpotifyID := os.Getenv("SPOTIFY_ID")
-	// SpotifySecret := os.Getenv("SPOTIFY_SECRET")
-	// spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
-	// firestoreClient := setupFirestore()
-	// RefreshPlaylist(spotifyClient, firestoreClient)
-	// RestoreSongs(firestoreClient)
-	// fmt.Println(time.Now())
-	lambda.Start(RestoreSongs)
+	SpotifyID := os.Getenv("SPOTIFY_ID")
+	SpotifySecret := os.Getenv("SPOTIFY_SECRET")
+	spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
+	firestoreClient := setupFirestore()
+	RefreshPlaylist(spotifyClient, firestoreClient)
+	RestoreSongs(firestoreClient)
 
 }
 
-// func initEnv() {
-// if err := godotenv.Load(); err != nil {
-// log.Print("No .env file found")
-// }
-// }
+func initEnv() {
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
+}
 
-// func setupSpotify(id, secret string) spotify.Client {
-// config := &clientcredentials.Config{
-// ClientID:     id,
-// ClientSecret: secret,
-// TokenURL:     spotify.TokenURL,
-// }
-// token, err := config.Token(context.Background())
-// if err != nil {
-// fmt.Fprintln(os.Stderr, err.Error())
-// }
-// cli := spotify.Authenticator{}.NewClient(token)
-// return cli
-// }
-
-// func setupFirestore() *firestore.Client {
-// sess, _ := session.NewSession(&aws.Config{
-// Region: aws.String("ap-south-1")},
-// )
-//
-// downloader := s3manager.NewDownloader(sess)
-// input := &s3.GetObjectInput{
-// Bucket: aws.String("adminsdkjson"),
-// Key:    aws.String("adminsdk.json"),
-// }
-// buf := aws.NewWriteAtBuffer([]byte{})
-// downloader.Download(buf, input)
-// fmt.Printf("Downloaded %v bytes", len(buf.Bytes()))
-// fmt.Println(string(buf.Bytes()))
-//
-// opt := option.WithCredentialsJSON(buf.Bytes())
-// app, err := firebase.NewApp(context.Background(), nil, opt)
-// if err != nil {
-// log.Fatalln(err)
-// }
-// client, err := app.Firestore(context.Background())
-// if err != nil {
-// log.Fatalln(err)
-// }
-// return client
-// }
-
-// RefreshPlaylist is a cronjob which gets new recommendations from the Spotify API, and then updates
-// the playlist and the Firestore datbase with the new songs.
-func RefreshPlaylist() {
-
-	// Spotify OAUTH stuff
-	id := os.Getenv("SPOTIFY_ID")
-	secret := os.Getenv("SPOTIFY_SECRET")
+func setupSpotify(id, secret string) spotify.Client {
 	config := &clientcredentials.Config{
 		ClientID:     id,
 		ClientSecret: secret,
@@ -113,8 +63,11 @@ func RefreshPlaylist() {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
 	cli := spotify.Authenticator{}.NewClient(token)
+	return cli
+}
 
-	// Firestore setup stuff
+//
+func setupFirestore() *firestore.Client {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("ap-south-1")},
 	)
@@ -138,7 +91,12 @@ func RefreshPlaylist() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	return client
+}
 
+// RefreshPlaylist is a cronjob which gets new recommendations from the Spotify API, and then updates
+// the playlist and the Firestore datbase with the new songs.
+func RefreshPlaylist(cli spotify.Client, client *firestore.Client) {
 	// Refresh the collection
 	var mostUpvoted []spotify.ID
 	iter := client.Collection("songs").OrderBy("upvotes", firestore.Desc).Limit(5).Documents(context.Background())
@@ -185,34 +143,7 @@ func RefreshPlaylist() {
 	}
 }
 
-func RestoreSongs() {
-
-	// Firestore setup stuff
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String("ap-south-1")},
-	)
-
-	downloader := s3manager.NewDownloader(sess)
-	input := &s3.GetObjectInput{
-		Bucket: aws.String("adminsdkjson"),
-		Key:    aws.String("adminsdk.json"),
-	}
-	buf := aws.NewWriteAtBuffer([]byte{})
-	downloader.Download(buf, input)
-	fmt.Printf("Downloaded %v bytes", len(buf.Bytes()))
-	fmt.Println(string(buf.Bytes()))
-
-	opt := option.WithCredentialsJSON(buf.Bytes())
-	app, err := firebase.NewApp(context.Background(), nil, opt)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	client, err := app.Firestore(context.Background())
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Restore songs
+func RestoreSongs(client *firestore.Client) {
 	comparisonTime := time.Now().Add(time.Duration(-9) * time.Minute).UTC()
 	query := client.Collection("recentlyPlayed").Where("time", "<", comparisonTime)
 	iter := query.Documents(context.Background())
