@@ -1,16 +1,18 @@
 package main
 
 import (
-	firestore "cloud.google.com/go/firestore"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"time"
+
+	firestore "cloud.google.com/go/firestore"
 	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/api/iterator"
-	"log"
-	"os"
-	"time"
 
 	"google.golang.org/api/option"
 
@@ -29,13 +31,26 @@ type SpotifyTrack struct {
 	Time     time.Time `json:"time"`
 }
 
+type FirestoreDeets struct {
+	Type          string `json:"type"`
+	ProjectID     string `json:"project_id"`
+	PrivateKeyID  string `json:"private_key_id"`
+	PrivateKey    string `json:"private_key"`
+	ClientID      string `json:"client_id"`
+	ClientEmail   string `json:"client_email"`
+	AuthURI       string `json:"auth_uri"`
+	TokenURI      string `json:"token_uri"`
+	AuthProvider  string `json:"auth_provider_x509_cert_url"`
+	ClientCertURL string `json:"client_x509_cert_url"`
+}
+
 func main() {
 	initEnv()
-	SpotifyID := os.Getenv("SPOTIFY_ID")
-	SpotifySecret := os.Getenv("SPOTIFY_SECRET")
-	spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
+	//SpotifyID := os.Getenv("SPOTIFY_ID")
+	//SpotifySecret := os.Getenv("SPOTIFY_SECRET")
+	//spotifyClient := setupSpotify(SpotifyID, SpotifySecret)
 	firestoreClient := setupFirestore()
-	RefreshPlaylist(spotifyClient, firestoreClient)
+	//RefreshPlaylist(spotifyClient, firestoreClient)
 	RestoreSongs(firestoreClient)
 	fmt.Println(time.Now())
 }
@@ -61,7 +76,34 @@ func setupSpotify(id, secret string) spotify.Client {
 }
 
 func setupFirestore() *firestore.Client {
-	opt := option.WithCredentialsFile("adminsdk.json")
+	//	PID := os.Getenv("PROJECT_ID")
+	//	PKI := os.Getenv("PRIVATE_KEY_ID")
+	//	PK := os.Getenv("PRIVATE_KEY")
+	//	CEmail := os.Getenv("CLIENT_EMAIL")
+	//	CId := os.Getenv("CLIENT_ID")
+	//	Auth := os.Getenv("AUTH_URI")
+	//	Token := os.Getenv("TOKEN_URI")
+	//	AProvider := os.Getenv("AUTH_PROVIDER")
+	//	ClientCert := os.Getenv("CLIENT_CERT")
+	//fmt.Println(PK)
+	//stuff := &FirestoreDeets{
+	//	Type:          "service_account",
+	//	ProjectID:     PID,
+	//	PrivateKeyID:  PKI,
+	//	PrivateKey:    PK,
+	//	ClientEmail:   CEmail,
+	//	ClientID:      CId,
+	//	AuthURI:       Auth,
+	//	TokenURI:      Token,
+	//	AuthProvider:  AProvider,
+	//	ClientCertURL: ClientCert,
+	//}
+	//deets, _ := json.Marshal(stuff)
+	//fmt.Println(string(deets))
+	file, err := os.Open("adminsdk.json")
+	defer file.Close()
+	values, _ := ioutil.ReadAll(file)
+	opt := option.WithCredentialsJSON(values)
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalln(err)
